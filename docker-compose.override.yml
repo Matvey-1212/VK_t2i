@@ -1,0 +1,4 @@
+services:
+  t2i:
+    volumes:
+      - ./app.py:/app/app.py:ro

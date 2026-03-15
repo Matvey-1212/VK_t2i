@@ -1,0 +1,36 @@
+services:
+  t2i:
+    build: .
+    image: t2i-gradio:latest
+    init: true
+    ports:
+      - "${HOST_PORT:-8888}:8888"
+    environment:
+      SD_MODEL: ${SD_MODEL:-runwayml/stable-diffusion-v1-5}
+      LORA_DIR: ${LORA_DIR:-/app/lora}
+      LORA_WEIGHT_NAME: ${LORA_WEIGHT_NAME:-pytorch_lora_weights.safetensors}
+      PORT: "8888"
+      HF_HOME: /root/.cache/huggingface
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - ${HF_CACHE_DIR:-${HOME}/.cache/huggingface}:/root/.cache/huggingface
+      - ${LORA_VOLUME:-./lora}:/app/lora
+    shm_size: "2gb"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:8888/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 180s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
